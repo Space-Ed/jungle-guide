@@ -168,7 +168,7 @@ savanah.put('tick')
 
 ### A Changing Environment
 
-an ecology is a constantly changing and evolving context, with new creatures being born all the time and the rules of the landscape changing. The same could be said of the  technological landscape we operate in today. Everything in the space will adapt to the addition and removal of new creatures automatically creating the relationships intrinsic to the context, even new forms and laws of connection can come and go. 
+an ecology is a constantly changing and evolving context, with new creatures being born all the time and the rules of the landscape changing. The same could be said of the  technological landscape we operate in today. Everything in the space will adapt to the addition and removal of new creatures automatically creating the relationships intrinsic to the context, even new forms and laws of connection can come and go.
 
 ```js
 //apply a deep patch to the structure
@@ -177,18 +177,18 @@ savanah.patch({simba:j('predator')})
 
 It is possible to reify into the domain as we proceed. This enables the domain to be used as a version history storing mechanism
 
-In the following example we create a simulator outer layer that 
+In the following example we create a simulator outer layer that
 
 ```js
 let simulator = domain.recover(j('cell', {
-    
+
     //the heart manages exposure and behaviour of self modification
     heart:{ 
         exposed:true,    
     },
-    
+
     simulation:j('ecology')
-    
+
     run({nprey, npred, nframes}){
         for (let i = 0; i<nprey; i++){
             this.heart.patch({simulation:j('prey')});
@@ -197,19 +197,19 @@ let simulator = domain.recover(j('cell', {
          for (let i = 0; i<nprey; i++){
             this.heart.patch({simulation:j('prey')});
         }
-        
-        
+
+
         this.save()
     }
-        
+
     save:{
         this.heart.extract({simulation:null})).then((sim)=>{
             //patching with array is add all
             this.heart.patch({archive:[sim]})            
         }
-        
+
     },
-    
+
     archive:j([])
 })
 
@@ -237,11 +237,11 @@ Every Composite in jungle operates within a domain that defines the possible
 
 It must be possible for different contexts to have different sets of building blocks to work with, for example an audio context involves routing audio between nodes that would be available in that context and not elsewhere.
 
-To achieve this it is possible to create subdomains that are either isolated or inheriting which allow the redefinition of the existing constructs and creation of new constructs within a space that 
+To achieve this it is possible to create subdomains that are either isolated or inheriting which allow the redefinition of the existing constructs and creation of new constructs within a space that
 
 ### Integration
 
-Jungle aims to make it simple to create wrappers allowing integration with systems and enabling them to benefit from the built in  features of jungle. 
+Jungle aims to make it simple to create wrappers allowing integration with systems and enabling them to benefit from the built in  features of jungle.
 
 ### Health
 
