@@ -41,7 +41,7 @@ J.define('organism', j('cell',{
 let org = J.recover(j('organism'))
 
 //this is the async safe way to 'pull' values from a system
-org.extract({speed:null}).then(speed=>{
+org.extract({speed:12, size:null}).then(speed=>{
     //
 })
 
@@ -143,6 +143,7 @@ J.define('predator', j({
 
     stomach:0,
 
+    //methods defined as normal
     eat(food){
         this.stomach += food
     }
@@ -187,22 +188,28 @@ let simulator = domain.recover(j('cell', {
         exposed:true,    
     },
 
-    simulation:j('ecology')
+    simulation:j('ecology', {
+        tick:j('    
+    })
 
     run({nprey, npred, nframes}){
         for (let i = 0; i<nprey; i++){
-            this.heart.patch({simulation:j('prey')});
+            this.heart.patch({simulation:[j('prey')]});
         }
 
-         for (let i = 0; i<nprey; i++){
-            this.heart.patch({simulation:j('prey')});
+        for (let i = 0; i<nprey; i++){
+            this.heart.patch({simulation:[j('prey')]});
         }
 
+        for (let i = 0; i<nframes; i++){
+            //need to define run as a spring
+            this.simulation.tick()
+        }
 
         this.save()
     }
 
-    save:{
+    save(){
         this.heart.extract({simulation:null})).then((sim)=>{
             //patching with array is add all
             this.heart.patch({archive:[sim]})            
@@ -220,6 +227,10 @@ simulator.extract({archive:[]}).then(archive=>{
 ```
 
 ### Designation & Matching
+
+As we have seen with laws defined above they have the format of
+
+"designator expression -&gt; designator expression"
 
 ### Asynchronicity
 
@@ -247,11 +258,13 @@ Jungle aims to make it simple to create wrappers allowing integration with syste
 
 ### Multiplexing
 
-### Converging
+### Confluence
 
 ### Agents
 
 ### Extending the Foundation
+
+### 
 
 
 
