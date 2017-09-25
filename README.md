@@ -1,14 +1,14 @@
 # Jungle Documentation
 
-welcome to the Documentation, Tutorials and Examples for the Jungle Framework for the Concepts, Philosophy and Vision of the project see the Jungle Way \#\#TODO 
+welcome to the Documentation, Tutorials and Examples for the Jungle Framework for the Concepts, Philosophy and Vision of the project see the Jungle Way \#\#TODO
 
-### A framework for organic modular systems capable of: 
+### A framework for organic modular systems capable of:
 
 Composability - Components can made by composing other components
 
 Dynamic Extension - Systems can grow and define new components over time
 
-Adaptive Connectedness - The connections between components are declared as laws that will create links when the components appear and destroy them as they disappear. 
+Adaptive Connectedness - The connections between components are declared as laws that will create links when the components appear and destroy them as they disappear.
 
 Recoverability - Entire and partial systems can be described as serial data and recovered elsewhere and when
 
@@ -17,39 +17,43 @@ General Purpose - Wrap any interface and mount to any platform, operate with pus
 ### Basic definition and recovery of a cell
 
 ```js
-const Jungle = require('jungle')
-const domain = Jungle.Core
-const j = Jungle.j
+import {j, J} from 'jungle-core'
 
-// The domain represents the set of available patterns that can be built in a context
+// J is the domain that represents the set of foundational patterns that can be used
+// j is a syntax sugar function. 
+//   the first argument is the 'base' and second the 'description'
+//   it gives us a standard jungle serial formatted object
 
-// within the domain we define orgainism based on cell
-domain.define('organism', j('cell',{
+// within the domain we define 'orgainism' based on cell, that is the foundational Object wrapper
+J.define('organism', j('cell',{
 
-    //head represents properties inate to this kind of object meta 
+    //head represents configuration of the top level object
     head:{
         exposure:'public' //make properties accessible to the outer js context
     },
-    
+
     //properties 
     speed:10
     size:10
 }))
 
 //instantiation is by recovery from domain
-let org = domain.recover(j('organism'))
+let org = J.recover(j('organism'))
 
 //org does not contain the properties
 org.exposed.speed = 12
 
+//managed teardown 
+org.dispose()
+
 //serialize changes by describing in domain
-let pattern = domain.describe(org)
+let pattern = J.describe(org)
 
 //define a new kind from the other
-domain.define('being', pattern)
+J.define('being', pattern)
 
 //recovery with special properties
-let org2 = domain.recover(j('copy',{
+let org2 = J.recover(j('copy',{
     size:15
 })
 
@@ -58,21 +62,36 @@ let org2 = domain.recover(j('copy',{
 
 ### Definition of a context
 
-We want to create an ecology of interacting organisms, one seemingly simple relationship that can be shared is that of eating another organism,  actually it is quite a complex process, as one of many kinds of organism, a predator must first come into contact with prey, which they do by hunting, waiting or chance, then they must overcome thier prey by speed, might and cunning and then they will consume their prey which bestows them with some resources and leaving a carcass of some kind, all while consuming energy and moving around over time through a complex landscape.
+Say we want to simulate an ecology of interacting organisms. This will require the creation of a context that models the relationships between organisms. One relationship that can be modelled is that of eating another organism that one might describe as follows. 
 
-We will make a simplification that  whenever a preditor is hungry it will eat the thing it can get to first. To do this we create a race of prey\(the winner loses\). The prey will then be removed from the context.
+as one of many kinds of organism, a predator must first come into contact with prey, which they do by hunting, waiting or chance, then they must overcome thier prey by speed, might and cunning and then they will consume their prey which bestows them with some resources and leaving a carcass of some kind, all while consuming energy and moving around over time through a complex landscape.
+
+We will make a simplification that  whenever a preditor is hungry it will eat the thing it can get to first. To do this we create a race of prey\(the winner loses\). The prey will then be removed from the context. For now time is controlled from outside
 
 ```js
+
 domain.define('ecology',j('cell', {
+    
     // define a medium within the space that dictates what eats what
    eats:j('media:race',{
-      law:'*:aspredator->*:asprey'
-   })
+      law:'*:predation->*:preyed' //many to many
+   }),
+   
+   //distribute time to all members
+   time:j('media:broadcast',{
+       law:'tick->*:tick' //one to many
+   }),
+   
+   // this is an op contact they appear on the membranes 'shell' and 'lining' 
+   // in this case it is a tunnel from outside to in
+   tick:j('op',{
+       carry_in:true
+   }
 
 })
 
 domain.define('prey',j('organism',{
-    asprey:j('op',{
+    preyed:j('op',{
          resolve_in(predator){
             //a promise to fulfill when caught
             let junc = new Junction()
@@ -89,10 +108,40 @@ domain.define('prey',j('organism',{
 }))
 
 domain.define('predator', j({
-    hunger:j('op',{
-       carry_in 
+
+    //ticks come in 
+    behaviour:j('media:direct',{
+        law:'tick->hunger->predation'
     }),
-     aspredator:j('op',{
+
+    tick:j('op',{
+       carry_in:true
+    }),
+    
+    hunger:j('op',{
+        reflex_out(){
+            return this.speed
+        }
+    },
+    
+    predation:j('rop',{
+        minor_op(inp, carry){
+            let predationRace = carry(inp)
+            
+            predationRace.then(food=>{
+                this.eat(food)
+            ))
+            
+        },
+        
+        minor_arg1:'carry'
+    },
+    
+    stomach:0,
+    
+    eat(food){
+        this.stomach += food
+    }
 
 })
 
@@ -106,9 +155,48 @@ const ecology1 = domain.recover(j('ecology',{
         speed:10,
     })
 ))
+
+//trigger a time increment
+ecology1.put('tick')
+
+//the result of this is that the lion eats the gazelle and attains 
 ```
 
-### 
+### Dynamic Operation
+
+an ecology is a constantly changing and evolving context, with new creatures being born all the time. The same could be said of the  Everything in the space will adapt to the addition and removal of new creatures 
+
+### Asynchronicity
+
+Obviously the real world is not always ready and external systems must be waited on. Jungle uses a special form of promise called a junction to manage all its asynchronicity. Junctions themselves have a modular style allowing for several different strategies for merging asynchronous values. 
+
+The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate. That should be considered by any mount that uses components that are wrapping not to fire any events or require any response until the system is completely constructed. 
+
+### Anonymity
+
+Often compex data is not named object structure, it is instead ordered or unordered collections of things, this requires the ability to have basic support for Arrays and Sets using Anonymous IDs 
+
+### Subdomains
+
+Every Composite in jungle operates within a domain that defines the possible 
+
+It must be possible for different contexts to have different sets of building blocks to work with, for example an audio context involves routing audio between nodes that would be available in that context and not elsewhere. 
+
+
+
+To achieve this it is possible to create subdomains that 
+
+### Integration
+
+### Health
+
+### Multiplexing
+
+### Converging
+
+### Agents
+
+### Extending the Foundation
 
 
 
