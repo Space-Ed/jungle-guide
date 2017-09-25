@@ -1,4 +1,4 @@
-# Jungle Documentation
+# Jungle User Guide
 
 welcome to the Documentation, Tutorials and Examples for the Jungle Framework for the Concepts, Philosophy and Vision of the project see the Jungle Way \#\#TODO
 
@@ -40,6 +40,11 @@ J.define('organism', j('cell',{
 //instantiation is by recovery from domain
 let org = J.recover(j('organism'))
 
+//this is the async safe way to 'pull' values from a system
+org.extract({speed:null}).then(speed=>{
+    //
+})
+
 //org does not contain the properties
 org.exposed.speed = 12
 
@@ -53,7 +58,7 @@ let pattern = J.describe(org)
 J.define('being', pattern)
 
 //recovery with special properties
-let org2 = J.recover(j('copy',{
+let org2 = J.recover(j('being',{
     size:15
 })
 
@@ -62,26 +67,25 @@ let org2 = J.recover(j('copy',{
 
 ### Definition of a context
 
-Say we want to simulate an ecology of interacting organisms. This will require the creation of a context that models the relationships between organisms. One relationship that can be modelled is that of eating another organism that one might describe as follows. 
+Say we want to simulate an ecology of interacting organisms. This will require the creation of a context that models the relationships between organisms. One relationship that can be modelled is that of eating another organism that one might describe as follows.
 
 as one of many kinds of organism, a predator must first come into contact with prey, which they do by hunting, waiting or chance, then they must overcome thier prey by speed, might and cunning and then they will consume their prey which bestows them with some resources and leaving a carcass of some kind, all while consuming energy and moving around over time through a complex landscape.
 
 We will make a simplification that  whenever a preditor is hungry it will eat the thing it can get to first. To do this we create a race of prey\(the winner loses\). The prey will then be removed from the context. For now time is controlled from outside
 
 ```js
+J.define('ecology',j('cell', {
 
-domain.define('ecology',j('cell', {
-    
     // define a medium within the space that dictates what eats what
    eats:j('media:race',{
       law:'*:predation->*:preyed' //many to many
    }),
-   
+
    //distribute time to all members
    time:j('media:broadcast',{
        law:'tick->*:tick' //one to many
    }),
-   
+
    // this is an op contact they appear on the membranes 'shell' and 'lining' 
    // in this case it is a tunnel from outside to in
    tick:j('op',{
@@ -90,7 +94,7 @@ domain.define('ecology',j('cell', {
 
 })
 
-domain.define('prey',j('organism',{
+J.define('prey',j('organism',{
     preyed:j('op',{
          resolve_in(predator){
             //a promise to fulfill when caught
@@ -107,7 +111,7 @@ domain.define('prey',j('organism',{
 
 }))
 
-domain.define('predator', j({
+J.define('predator', j({
 
     //ticks come in 
     behaviour:j('media:direct',{
@@ -117,35 +121,35 @@ domain.define('predator', j({
     tick:j('op',{
        carry_in:true
     }),
-    
+
     hunger:j('op',{
         reflex_out(){
             return this.speed
         }
     },
-    
+
     predation:j('rop',{
         minor_op(inp, carry){
             let predationRace = carry(inp)
-            
+
             predationRace.then(food=>{
                 this.eat(food)
             ))
-            
+
         },
-        
+
         minor_arg1:'carry'
     },
-    
+
     stomach:0,
-    
+
     eat(food){
         this.stomach += food
     }
 
 })
 
-const ecology1 = domain.recover(j('ecology',{    
+const savanah = J.recover(j('ecology',{    
     lion:j('predator',{
         size:25,
     }),
@@ -157,36 +161,87 @@ const ecology1 = domain.recover(j('ecology',{
 ))
 
 //trigger a time increment
-ecology1.put('tick')
+savanah.put('tick')
 
-//the result of this is that the lion eats the gazelle and attains 
+//the result of this is that the lion eats the gazelle and attains
 ```
 
-### Dynamic Operation
+### A Changing Environment
 
-an ecology is a constantly changing and evolving context, with new creatures being born all the time. The same could be said of the  Everything in the space will adapt to the addition and removal of new creatures 
+an ecology is a constantly changing and evolving context, with new creatures being born all the time and the rules of the landscape changing. The same could be said of the  technological landscape we operate in today. Everything in the space will adapt to the addition and removal of new creatures automatically creating the relationships intrinsic to the context, even new forms and laws of connection can come and go. 
+
+```js
+//apply a deep patch to the structure
+savanah.patch({simba:j('predator')})
+```
+
+It is possible to reify into the domain as we proceed. This enables the domain to be used as a version history storing mechanism
+
+In the following example we create a simulator outer layer that 
+
+```js
+let simulator = domain.recover(j('cell', {
+    
+    //the heart manages exposure and behaviour of self modification
+    heart:{ 
+        exposed:true,    
+    },
+    
+    simulation:j('ecology')
+    
+    run({nprey, npred, nframes}){
+        for (let i = 0; i<nprey; i++){
+            this.heart.patch({simulation:j('prey')});
+        }
+
+         for (let i = 0; i<nprey; i++){
+            this.heart.patch({simulation:j('prey')});
+        }
+        
+        
+        this.save()
+    }
+        
+    save:{
+        this.heart.extract({simulation:null})).then((sim)=>{
+            //patching with array is add all
+            this.heart.patch({archive:[sim]})            
+        }
+        
+    },
+    
+    archive:j([])
+})
+
+//pull out the anonymous values from the archive
+simulator.extract({archive:[]}).then(archive=>{
+    //save archive to Database/fs or recover in a viewing context.
+}
+```
+
+### Designation & Matching
 
 ### Asynchronicity
 
-Obviously the real world is not always ready and external systems must be waited on. Jungle uses a special form of promise called a junction to manage all its asynchronicity. Junctions themselves have a modular style allowing for several different strategies for merging asynchronous values. 
+Obviously the real world is not always ready and external systems must be waited on to provide expected results, and quite often these results are failures. Jungle uses a special form of promise called a junction to manage all its asynchronicity. Junctions themselves have a modular style allowing for several different strategies for merging promised values.
 
-The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate. That should be considered by any mount that uses components that are wrapping not to fire any events or require any response until the system is completely constructed. 
+The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate. That should be considered by any mount that uses components that are wrapping not to fire any events or require any response until the system is completely constructed.
 
 ### Anonymity
 
-Often compex data is not named object structure, it is instead ordered or unordered collections of things, this requires the ability to have basic support for Arrays and Sets using Anonymous IDs 
+Often compex data is not named object structure, it is instead ordered or unordered collections of things, this requires the ability to have basic support for Arrays and Sets using Anonymous IDs
 
 ### Subdomains
 
-Every Composite in jungle operates within a domain that defines the possible 
+Every Composite in jungle operates within a domain that defines the possible
 
-It must be possible for different contexts to have different sets of building blocks to work with, for example an audio context involves routing audio between nodes that would be available in that context and not elsewhere. 
+It must be possible for different contexts to have different sets of building blocks to work with, for example an audio context involves routing audio between nodes that would be available in that context and not elsewhere.
 
-
-
-To achieve this it is possible to create subdomains that 
+To achieve this it is possible to create subdomains that are either isolated or inheriting which allow the redefinition of the existing constructs and creation of new constructs within a space that 
 
 ### Integration
+
+Jungle aims to make it simple to create wrappers allowing integration with systems and enabling them to benefit from the built in  features of jungle. 
 
 ### Health
 
