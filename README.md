@@ -230,13 +230,34 @@ simulator.extract({archive:[]}).then(archive=>{
 
 As we have seen with laws defined above they have the format of
 
-"designator expression -&gt; designator expression"
+"path.to:contact -&gt; path.to:contact"
 
 ### Asynchronicity
 
-Obviously the real world is not always ready and external systems must be waited on to provide expected results, and quite often these results are failures. Jungle uses a special form of promise called a junction to manage all its asynchronicity. Junctions themselves have a modular style allowing for several different strategies for merging promised values.
+Obviously the real world is not always ready and external systems must be waited on to provide expected results, and quite often these results are failures. 
 
-The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate. That should be considered by any mount that uses components that are wrapping not to fire any events or require any response until the system is completely constructed.
+#### **Junctions**
+
+Jungle uses a special form of promise called a junction to manage all its asynchronicity. Junctions themselves have a modular style allowing for several different strategies for merging promised values.
+
+```js
+//an example junction waiting on two asynchronous sources
+return new Junction()
+    .mode('object') 
+    .merge(httpReq/*other junction or promised/actual value*/, 'remoteData')
+    .merge(dbQuery, 'data')
+    .then(({data, remoteData})=>{
+        return combine(data, remoteData)
+    })
+```
+
+#### Construction
+
+The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate. 
+
+
+
+That should be considered by any mount that uses components that are wrapping not to fire any events or require any response until the system is completely constructed.
 
 ### Anonymity
 
@@ -255,6 +276,8 @@ To achieve this it is possible to create subdomains that are either isolated or 
 Jungle aims to make it simple to create wrappers allowing integration with systems and enabling them to benefit from the built in  features of jungle.
 
 ### Health
+
+Several systems have a notion of health, CI suites with red status lights, repositories with unresolved conflicts and validation fields with bad input. Rarely is it integrated at the level of the framework, usually it is left as an instantaneous error, rather than a persistent sickness. To be declarative and dynamic it is required that system health is created as a state, this allows us to define how 
 
 ### Multiplexing
 
