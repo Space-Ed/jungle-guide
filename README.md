@@ -234,7 +234,7 @@ As we have seen with laws defined above they have the format of
 
 ### Asynchronicity
 
-Obviously the real world is not always ready and external systems must be waited on to provide expected results, and quite often these results are failures. 
+Obviously the real world is not always ready and external systems must be waited on to provide expected results, and quite often these results are failures.
 
 #### **Junctions**
 
@@ -249,13 +249,26 @@ return new Junction()
     .then(({data, remoteData})=>{
         return combine(data, remoteData)
     })
+    
 ```
+
+other modes include:
+
+* 'last'\(default\): the last value to return once all have returned
+* 'order-in':  an array in the order that merged values fulfill 
+* 'order-out':   an array in the order that 
+* 'first': the first to return once all
+* 'race' : the first to return once any 
+* 'object'\(above\): create an object with given keys return once all are in
+* 'single': last among entries marked true, others are ignored
 
 #### Construction
 
-The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate. 
+The construction and destruction of organisms can be asyncronous, when components require time to construct they will return a junction from a prime method that fulfills when the component is ready to operate.
 
+```js
 
+```
 
 That should be considered by any mount that uses components that are wrapping not to fire any events or require any response until the system is completely constructed.
 
@@ -277,7 +290,7 @@ Jungle aims to make it simple to create wrappers allowing integration with syste
 
 ### Health
 
-Several systems have a notion of health, CI suites with red status lights, repositories with unresolved conflicts and validation fields with bad input. Rarely is it integrated at the level of the framework, usually it is left as an instantaneous error, rather than a persistent sickness. To be declarative and dynamic it is required that system health is created as a state, this allows us to define how 
+Several systems have a notion of health, CI suites with red status lights, repositories with unresolved conflicts and validation fields with bad input. Rarely is it integrated at the level of the framework, usually it is left as an instantaneous error, rather than a persistent sickness. To be declarative and dynamic it is required that system health is created as a state, this allows us to define how
 
 ### Multiplexing
 
@@ -287,7 +300,7 @@ Several systems have a notion of health, CI suites with red status lights, repos
 
 ### Extending the Foundation
 
-### 
+
 
 
 
