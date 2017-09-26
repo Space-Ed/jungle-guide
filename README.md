@@ -1,3 +1,6 @@
+
+---
+
 # Jungle User Guide
 
 welcome to the Documentation, Tutorials and Examples for the Jungle Framework for the Concepts, Philosophy and Vision of the project see the Jungle Way \#\#TODO
@@ -249,7 +252,6 @@ return new Junction()
     .then(({data, remoteData})=>{
         return combine(data, remoteData)
     })
-    
 ```
 
 other modes include:
@@ -299,8 +301,4 @@ Several systems have a notion of health, CI suites with red status lights, repos
 ### Agents
 
 ### Extending the Foundation
-
-
-
-
 
